@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/bulletin")   // 클래스 레벨 경로
 @RequiredArgsConstructor
 @Slf4j
-public class BulletinController {
+public class BulletinViewController {
 
     @GetMapping()
     public String bulletin() {

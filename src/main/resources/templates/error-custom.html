@@ -153,8 +153,8 @@
         <div class="card-body">
             <div class="logo-text">📚 어스름</div>
             <h2>에러가 발생했습니다 </h2>
-            <p>에러 메시지 : <span th:text="${errorMessage}">에러코드 404</span></p>
-            <button class="home-btn">🏠 홈으로 돌아가기</button>
+            <p>에러 메시지 : <span th:text="${errorMessage}">로컬 기본 메시지</span></p>
+            <button class="home-btn" onclick="location.href='/home'">🏠 홈으로 돌아가기</button>
         </div>
     </div>
 </section>
