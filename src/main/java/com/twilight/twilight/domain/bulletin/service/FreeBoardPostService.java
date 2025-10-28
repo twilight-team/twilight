@@ -2,6 +2,7 @@ package com.twilight.twilight.domain.bulletin.service;
 
 import com.twilight.twilight.domain.bulletin.dto.GetFreeBoardPostDetailDto;
 import com.twilight.twilight.domain.bulletin.dto.GetFreeBoardPostListDto;
+import com.twilight.twilight.domain.bulletin.dto.GetFreeBoardPostReplyDto;
 import com.twilight.twilight.domain.bulletin.repository.FreeBoardPostQueryRepository;
 import com.twilight.twilight.domain.bulletin.repository.FreeBoardPostRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,6 +42,11 @@ public class FreeBoardPostService {
         return freeBoardPostRepository.findByFreeBoardPostId(postId)
                 .map(GetFreeBoardPostDetailDto::fromEntity)
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. id=" + postId));
+    }
+
+    public List<GetFreeBoardPostReplyDto> getFreeBoardPostReplies(Long postId) {
+
+        return null;
     }
 
 

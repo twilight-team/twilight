@@ -33,23 +33,21 @@ public class FreeBoardViewController {
         model.addAttribute("post_list", list);
         Long numberOfPosts = freeBoardPostService.getTotalPostCount();
         model.addAttribute("post_count", numberOfPosts);
-        return "bulletin-free-board-list";
+        return "free-board-list";
     }
 
     @GetMapping("/{post-id}")
     private String getFreeBoardDetail(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable("post-id") Long postId
-            ,Model model
+            @PathVariable("post-id") Long postId,
+            Model model
     ) {
-        /*
+        GetFreeBoardPostDetailDto postDetailDto = freeBoardPostService.getFreeBoardPostDetail(postId);
+        model.addAttribute("postDetailDto", postDetailDto);
+        List<GetFreeBoardPostReplyDto> dtoList = freeBoardPostService.getFreeBoardPostReplies(postId);
+        model.addAttribute("replies", dtoList);
 
-        GetFreeBoardPostDetailDto dto = freeBoardPostService.getFreeBoardPostDetail();
-        model.addAttribute("post", dto);
-        List<GetFreeBoardPostReplyDto> dtoList = freeBoardPostService.getFreeBoardPostReplies();
-        model.addAttribute("replies, dtoList);
-         */
-        return null;
+        return "bulletin-free-board-detail";
     }
 
 
