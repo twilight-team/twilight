@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class FreeBoardPost {
 
     @Id
@@ -55,5 +57,13 @@ public class FreeBoardPost {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void incrementViews() {
+        this.views++;
+    }
+
+    public void increaseNumberOfComments() {
+        this.numberOfRecommendations++;
+    }
 
 }

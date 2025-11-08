@@ -2,7 +2,9 @@ package com.twilight.twilight.domain.bulletin.service;
 
 import com.twilight.twilight.domain.bulletin.dto.*;
 import com.twilight.twilight.domain.bulletin.entity.FreeBoardPost;
+import com.twilight.twilight.domain.bulletin.entity.FreeBoardPostRecommendation;
 import com.twilight.twilight.domain.bulletin.repository.FreeBoardPostQueryRepository;
+import com.twilight.twilight.domain.bulletin.repository.FreeBoardPostRecommendationRepository;
 import com.twilight.twilight.domain.bulletin.repository.FreeBoardPostRepository;
 import com.twilight.twilight.domain.member.entity.Member;
 import com.twilight.twilight.domain.member.type.Role;
@@ -27,6 +29,7 @@ public class FreeBoardPostService {
     private final FreeBoardPostQueryRepository freeBoardPostQueryRepository;
     private final StringRedisTemplate redisTemplate;
     private final FreeBoardPageProps pageProps;
+    private final FreeBoardPostRecommendationRepository freeBoardPostRecommendationRepository;
 
     private static final String TOTAL_COUNT_KEY = "freeBoard:totalCount";
 
@@ -46,9 +49,13 @@ public class FreeBoardPostService {
         return freeBoardPostQueryRepository.findTopNByOrderByCreatedAtDesc(pageProps.getPostSize());
     }
 
+    @Transactional
     public GetFreeBoardPostDetailDto getFreeBoardPostDetail(Long postId) {
         return freeBoardPostRepository.findByFreeBoardPostId(postId)
-                .map(GetFreeBoardPostDetailDto::fromEntity)
+                .map(post -> {
+                    post.incrementViews();
+                    return GetFreeBoardPostDetailDto.fromEntity(post);
+                })
                 .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. id=" + postId));
     }
 
@@ -56,6 +63,7 @@ public class FreeBoardPostService {
         return freeBoardPostQueryRepository.findTopNRepliesOrderByCreatedAtDesc(postId, pageProps.getReplySize());
     }
 
+    @Transactional
     public void savePost(Member member, FreeBoardPostForm form ) {
         freeBoardPostRepository.save(
                 FreeBoardPost.builder()
@@ -98,6 +106,31 @@ public class FreeBoardPostService {
         }
 
         freeBoardPostRepository.delete(post);
+    }
+
+    @Transactional
+    public void increasePostRecommendation(Member member, Long postId) {
+        FreeBoardPost post = freeBoardPostRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("게시글을 찾을 수 없습니다. id=" + postId));
+
+        if (post.getMember().getMemberId().equals(member.getMemberId())) {
+            throw new AccessDeniedException("자기 자신의 글은 추천하실 수 없습니다.");
+        }
+
+        if (freeBoardPostRecommendationRepository.existsByMemberAndPost(member,post)) {
+            throw new IllegalStateException("이미 추천한 게시글입니다.");
+        }
+
+        
+        post.increaseNumberOfComments();
+        freeBoardPostRepository.save(post);
+
+        freeBoardPostRecommendationRepository.save(
+                FreeBoardPostRecommendation.builder()
+                        .post(post)
+                        .member(member)
+                        .build()
+        );
     }
 
 

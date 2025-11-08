@@ -39,11 +39,21 @@ public class FreeBoardViewController {
             Model model
     ) {
         GetFreeBoardPostDetailDto postDetailDto = freeBoardPostService.getFreeBoardPostDetail(postId);
-        model.addAttribute("postDetailDto", postDetailDto);
+        model.addAttribute("post", postDetailDto);
         List<GetFreeBoardPostReplyDto> dtoList = freeBoardPostService.getFreeBoardPostReplies(postId);
         model.addAttribute("replies", dtoList);
-
+        model.addAttribute("memberId", userDetails.getMember().getMemberId());
         return "bulletin/free-board-post-detail";
+    }
+
+    @PostMapping("/{post-id}/recommend")
+    private String increaseRecommendation(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable("post-id") Long postId
+    ) {
+        freeBoardPostService.increasePostRecommendation(userDetails.getMember(), postId);
+
+        return "redirect:/bulletin/free-board/{post-id}";
     }
 
     @GetMapping("/write")
@@ -53,7 +63,7 @@ public class FreeBoardViewController {
         return "bulletin/bulletin-free-board-write";
     }
 
-    @PostMapping()
+    @PostMapping("/write")
     private String writeFreeBoard(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ModelAttribute FreeBoardPostForm form

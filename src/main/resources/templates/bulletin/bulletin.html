@@ -43,7 +43,7 @@
       color: #5e4633;
     }
 
-    .card-body {
+    .card-body{
       padding: 1rem 1.5rem;
       overflow-y: auto;
     }
@@ -53,6 +53,21 @@
       color: #7b4b39;
       margin-top: 1rem;
       margin-bottom: 0.5rem;
+    }
+
+    .post-title {
+      flex: 1;
+      /* 남는 공간 차지 */
+      min-width: 0;
+      /* 말줄임 처리를 위해 */
+      display: block;
+      /* flex item이라 같은 줄 유지 */
+      color: #3e2f20;
+      text-decoration: none;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .book-carousel-wrapper {
@@ -175,7 +190,7 @@
       <div class="notice-list">
         <!-- 리스트 반복 -->
         <div th:each="post : ${freeBoardPostList}" class="notice-item">
-          <a th:href="@{/bulletin/free-board/{id}(id=${post.id})}" th:text="${post.title}">
+          <a class="notice-item" th:href="@{/bulletin/free-board/{id}(id=${post.getFreeBoardPostId()})}" th:text="${post.title}">
             [TEST] 게시글 제목
           </a>
         </div>
