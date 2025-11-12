@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>내 서재 (기능 통합 - 파일 첨부 제거)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        @font-face {
+            font-family: 'CookieRun-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'CookieRun-Regular', sans-serif;
+            background-color: #e6dcd0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .card-main-container {
+            border-radius: 1.5rem;
+            width: 375px;
+            height: 650px;
+            background-color: #fffaf6;
+            display: flex;
+            flex-direction: column;
+            margin: 2rem auto;
+            border: 2px solid #d6ccc2;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header-custom {
+            color: #5e4633;
+            background-color: transparent;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #d6ccc2;
+        }
+
+        .card-header-custom h4 {
+            margin-bottom: 0;
+        }
+
+        .card-body-scrollable {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 1rem;
+        }
+
+        .card-body-scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-body-scrollable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .card-body-scrollable::-webkit-scrollbar-thumb {
+            background-color: rgba(90, 60, 40, 0.3);
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card-body-scrollable.scrolling::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+
+        .book-item {
+            background-color: #fdf8f2;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .book-item:hover {
+            transform: scale(1.05);
+        }
+
+        .book-item img {
+            max-width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .book-item p {
+            font-size: 0.9rem;
+            color: #5e4633;
+            margin-bottom: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .footer-nav {
+            background-color: #ead4c5;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0.5rem 0;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+        }
+
+        .footer-nav .btn-dark {
+            background: transparent;
+            border: none;
+            color: #4e3b31;
+            flex: 1;
+        }
+
+        .footer-nav .btn-dark.active {
+            color: #d4a373;
+        }
+
+        .footer-nav .btn-dark i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .footer-nav .btn-dark small {
+            font-size: 0.75rem;
+        }
+
+        .modal-content-custom {
+            background-color: #fffaf6;
+            color: #5e4633;
+            font-family: 'CookieRun-Regular', sans-serif;
+            border-radius: 0.5rem;
+            border: 1px solid #d6ccc2;
+        }
+
+        .modal-header-custom {
+            border-bottom: 1px solid #d6ccc2;
+            padding: 0.75rem 1rem;
+            color: #5e4633;
+        }
+
+        .modal-header-custom .modal-title {
+            font-size: 1.25rem;
+        }
+
+        .modal-header-custom .close {
+            color: #5e4633;
+            opacity: 0.7;
+        }
+
+        .modal-book-cover {
+            max-width: 120px;
+            height: auto;
+            margin: 0 auto 1rem auto;
+            border-radius: 0.25rem;
+            display: block;
+            border: 1px solid #d6ccc2;
+        }
+
+        .modal-body-custom {
+            padding: 1rem 1.5rem;
+        }
+
+        .modal-body-custom h5 {
+            font-size: 1.15rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+            color: #5e4633;
+        }
+
+        .modal-body-custom .text-muted {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            color: #8c7460 !important;
+        }
+
+        .modal-body-custom .book-description {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            max-height: 100px;
+            overflow-y: auto;
+            text-align: left;
+            background-color: #fdf8f2;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e6dcd0;
+        }
+
+        .reading-logs-container {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e6dcd0;
+        }
+
+        .reading-logs-container h6 {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            color: #5e4633;
+        }
+
+        .log-entry {
+            background-color: #fff;
+            border: 1px solid #d6ccc2;
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .log-entry .log-date {
+            font-weight: bold;
+            color: #8c7460;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .log-entry .log-text {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            color: #5e4633;
+        }
+
+        .log-entry .log-image {
+            /* Style for displaying existing images if any */
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+            border: 1px solid #e6dcd0;
+        }
+
+        .no-logs {
+            color: #8c7460;
+            font-style: italic;
+            font-size: 0.85rem;
+        }
+
+        #addLogModal .form-group label {
+            font-size: 0.9rem;
+            color: #5e4633;
+        }
+
+        #addLogModal .form-control {
+            background-color: #fdf8f2;
+            border-color: #d6ccc2;
+            color: #5e4633;
+        }
+
+        #addLogModal .form-control::placeholder {
+            color: #a08c7c;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #d6ccc2;
+        }
+
+        .modal-footer .btn-secondary {
+            background-color: #b0a090;
+            border-color: #b0a090;
+            color: #fffaf6;
+        }
+
+        .modal-footer .btn-secondary:hover {
+            background-color: #9a8a7a;
+            border-color: #9a8a7a;
+        }
+
+        .modal-footer .btn-primary {
+            background-color: #d4a373;
+            border-color: #d4a373;
+            color: #fffaf6;
+        }
+
+        .modal-footer .btn-primary:hover {
+            background-color: #c89363;
+            border-color: #c89363;
+        }
+
+        .modal-footer .btn-success {
+            background-color: #8cb369;
+            border-color: #8cb369;
+            color: #fffaf6;
+        }
+
+        .modal-footer .btn-success:hover {
+            background-color: #7a9f59;
+            border-color: #7a9f59;
+        }
+    </style>
+</head>
+
+<body>
+<section class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card-main-container">
+        <div class="card-header-custom">
+            <h4><i class="fas fa-book"></i> 내 서재</h4>
+        </div>
+
+        <div class="card-body-scrollable" id="cardBodyScrollable">
+            <div class="book-grid" id="myLibraryBookGrid">
+            </div>
+        </div>
+
+        <nav class="footer-nav d-flex justify-content-around text-white">
+            <button class="btn btn-dark d-flex flex-column align-items-center"
+                    onclick="location.href='/home'">
+                <i class="fas fa-home"></i><small>홈</small>
+            </button>
+            <button class="btn btn-dark d-flex flex-column align-items-center active"
+                    onclick="location.href='/record'">
+                <i class="fas fa-book"></i><small>내 서재</small>
+            </button>
+            <button class="btn btn-dark d-flex flex-column align-items-center"
+                    onclick="location.href='/book/recommendation'">
+                <i class="fas fa-search"></i><small>책 추천</small>
+            </button>
+            <button class="btn btn-dark d-flex flex-column align-items-center"
+                    onclick="location.href='/bulletin'">
+                <i class="fas fa-comments"></i><small>게시판</small>
+            </button>
+            <button class="btn btn-dark d-flex flex-column align-items-center"
+                    onclick="location.href='/mypage'">
+                <i class="fas fa-user"></i><small>내 정보</small>
+            </button>
+        </nav>
+    </div>
+</section>
+
+<div class="modal fade" id="bookInfoModal" tabindex="-1" aria-labelledby="bookInfoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content modal-content-custom">
+            <div class="modal-header modal-header-custom">
+                <h5 class="modal-title" id="bookInfoModalLabel">책 정보</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body modal-body-custom">
+                <div class="text-center">
+                    <img src="" id="modalBookCover" class="img-fluid modal-book-cover" alt="Book Cover">
+                    <h5 id="modalBookTitle"></h5>
+                    <p id="modalBookAuthor" class="text-muted"></p>
+                </div>
+                <div id="modalBookDescription" class="book-description"></div>
+
+                <div class="reading-logs-container">
+                    <h6><i class="fas fa-feather-alt"></i> 독서 기록</h6>
+                    <div id="modalBookLogsContainer">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success mr-auto" id="openAddLogModalBtn"><i
+                        class="fas fa-plus"></i> 새 기록 추가</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addLogModal" tabindex="-1" aria-labelledby="addLogModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modal-content-custom">
+            <form id="addLogForm">
+                <div class="modal-header modal-header-custom">
+                    <h5 class="modal-title" id="addLogModalLabel">새 독서 기록 추가</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="currentBookIdForLog">
+                    <div class="form-group">
+                        <label for="logText">기록 내용</label>
+                        <textarea class="form-control" id="logText" rows="5" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">취소</button>
+                    <button type="submit" class="btn btn-primary">기록 저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.min.js"></script>
+
+<script>
+    const cardBody = document.getElementById('cardBodyScrollable');
+    let scrollTimer;
+
+    if (cardBody) {
+        cardBody.addEventListener('scroll', () => {
+            cardBody.classList.add('scrolling');
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => {
+                cardBody.classList.remove('scrolling');
+            }, 800);
+        });
+    }
+
+    function displayMyLibrary() {
+        const container = document.getElementById('myLibraryBookGrid');
+        container.innerHTML = '';
+
+        myBooks.forEach(book => {
+            const bookElement = document.createElement('div');
+            bookElement.classList.add('book-item');
+            bookElement.setAttribute('data-book-id', book.id);
+
+            const img = document.createElement('img');
+            img.src = book.cover;
+            img.alt = book.title;
+
+            const title = document.createElement('p');
+            title.textContent = book.title;
+
+            bookElement.appendChild(img);
+            bookElement.appendChild(title);
+            container.appendChild(bookElement);
+        });
+    }
+
+    const bookInfoModal = $('#bookInfoModal');
+    const addLogModal = $('#addLogModal');
+    const openAddLogModalBtn = document.getElementById('openAddLogModalBtn');
+    let currentBookId = null;
+
+    $('#myLibraryBookGrid').on('click', '.book-item', function () {
+        currentBookId = $(this).data('book-id');
+        displayBookInfo(currentBookId);
+        bookInfoModal.modal('show');
+    });
+
+    openAddLogModalBtn.addEventListener('click', () => {
+        if (currentBookId) {
+            $('#currentBookIdForLog').val(currentBookId);
+            addLogModal.modal('show');
+            bookInfoModal.modal('hide');
+        } else {
+            alert("책을 먼저 선택해주세요.");
+        }
+    });
+
+    addLogModal.on('hidden.bs.modal', () => {
+        $('#addLogForm')[0].reset();
+        // No image preview to reset
+    });
+
+    function displayBookInfo(bookId) {
+        const modalTitle = document.getElementById('modalBookTitle');
+        const modalAuthor = document.getElementById('modalBookAuthor');
+        const modalBookCover = document.getElementById('modalBookCover');
+        const modalBookDescription = document.getElementById('modalBookDescription');
+        const book = myBooks.find(b => b.id === bookId);
+
+        if (book) {
+            modalTitle.textContent = book.title;
+            modalAuthor.textContent = `저자: ${book.author}`;
+            modalBookCover.src = book.cover;
+            modalBookDescription.textContent = book.description;
+            currentBookId = book.id;
+            displayBookLogs(book.id);
+        } else {
+            console.error('Book not found for ID:', bookId);
+            modalTitle.textContent = "오류";
+            modalAuthor.textContent = "";
+            modalBookCover.src = "";
+            modalBookDescription.textContent = "책 정보를 불러올 수 없습니다.";
+            document.getElementById('modalBookLogsContainer').innerHTML = '<p class="no-logs">기록을 불러올 수 없습니다.</p>';
+        }
+    }
+
+    function displayBookLogs(bookId) {
+        const logsContainer = document.getElementById('modalBookLogsContainer');
+        const book = myBooks.find(b => b.id === bookId);
+        logsContainer.innerHTML = '';
+
+        if (book && book.logs && book.logs.length > 0) {
+            const sortedLogs = [...book.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedLogs.forEach(log => {
+                // Display existing images if they are present in the data
+                const logImageHTML = log.image ? `<img src="${log.image}" alt="독서 기록 이미지" class="log-image">` : '';
+                const logDate = new Date(log.date);
+                const formattedDate = `${logDate.getFullYear()}-${String(logDate.getMonth() + 1).padStart(2, '0')}-${String(logDate.getDate()).padStart(2, '0')}`;
+                const formattedTime = `${String(logDate.getHours()).padStart(2, '0')}:${String(logDate.getMinutes()).padStart(2, '0')}`;
+
+                const logElementHTML = `
+                    <div class="log-entry" data-log-id="${log.id}">
+                        <p class="log-date">${formattedDate} ${formattedTime}</p>
+                        <p class="log-text">${log.text.replace(/\n/g, '<br>')}</p>
+                        ${logImageHTML}
+                    </div>`;
+                logsContainer.innerHTML += logElementHTML;
+            });
+        } else {
+            logsContainer.innerHTML = '<p class="no-logs">아직 기록이 없습니다.</p>';
+        }
+    }
+
+    // File input related event listener removed
+
+    $('#addLogForm').on('submit', async function (event) {
+        event.preventDefault();
+        const bookIdForLog = $('#currentBookIdForLog').val();
+        const logText = $('#logText').val();
+        // imageFile related code removed
+
+        try {
+            const response = await fetch('/record/api/books/' + bookIdForLog + '/reading-record', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // 세션 쿠키 포함
+                body: JSON.stringify({
+                    text: logText
+                })
+            });
+
+            if (!response.ok) throw new Error('기록 저장 실패');
+
+            const newLog = await response.json(); // 서버에서 저장된 log 반환
+            const book = myBooks.find(b => b.id === Number(bookIdForLog));
+            book.logs.push(newLog); // 프론트에 반영
+
+            $('#addLogModal').modal('hide');
+        } catch (err) {
+            alert('기록 저장 중 오류가 발생했습니다');
+            console.error(err);
+        }
+    });
+
+    $('#addLogModal').on('hidden.bs.modal', function () {
+        $('#addLogForm')[0].reset(); // Reset the form
+        if (currentBookId) {
+            displayBookInfo(currentBookId);
+            $('#bookInfoModal').modal('show');
+        }
+    });
+
+    let myBooks = []; // 빈 배열로 초기화
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('/record/api/books', {
+                method: 'GET',
+                credentials: 'include', // 세션 쿠키 포함!
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('책 목록을 불러오지 못했습니다');
+            myBooks = await response.json(); // JSON 파싱
+            myBooks.forEach(book => {
+                if (!book.logs) book.logs = []; // logs 필드 없으면 빈 배열로 설정
+            });
+
+            displayMyLibrary(); // 기존 함수로 렌더링
+        } catch (error) {
+            console.error('서버 통신 오류:', error);
+            document.getElementById('myLibraryBookGrid').innerHTML = '<p>책 정보를 불러올 수 없습니다.</p>';
+        }
+    });
+
+</script>
+</body>
+
+</html>

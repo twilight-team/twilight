@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>책 추천</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&family=Noto+Serif+KR&display=swap"
+        rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'CookieRun-Regular';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'CookieRun-Regular', sans-serif;
+            background-color: #e6dcd0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .card-main-container {
+            width: 375px;
+            height: 650px;
+            background-color: #fffaf6;
+            border-radius: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            margin: 2rem auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 2px solid #d6ccc2;
+        }
+
+        .card-body-scrollable {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            color: #5e4633;
+        }
+
+        .card-body-scrollable::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-body-scrollable::-webkit-scrollbar-thumb {
+            background-color: rgba(90, 60, 40, 0.3);
+            border-radius: 10px;
+        }
+
+        h5 {
+            font-family: 'Nanum Myeongjo', serif;
+            color: #5e4633;
+        }
+
+        .btn-outline-light.active {
+            background-color: #d4a373 !important;
+            color: white !important;
+            border-color: #d4a373 !important;
+        }
+
+        .btn-outline-light {
+            color: #5e4633 !important; /* 진한 글씨 색 */
+            border-color: #a08c7c !important; /* 진한 테두리 */
+        }
+
+        .btn-light,
+        .btn-primary {
+            font-size: 1.1rem;
+        }
+
+        .btn-submit {
+            background-color: #f5c6aa;
+            color: #4e3b31;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn-submit:hover {
+            background-color: #f2bda0;
+            color: white;
+        }
+
+        .footer-nav {
+            background-color: #ead4c5;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0.5rem 0;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+        }
+
+        .footer-nav .btn-dark {
+            background: transparent;
+            border: none;
+            color: #4e3b31;
+            flex: 1;
+        }
+
+        .footer-nav .btn-dark.active {
+            color: #d4a373;
+        }
+
+        .footer-nav .btn-dark i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .footer-nav .btn-dark small {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+    <section class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+        <div class="card-main-container">
+            <div class="card-body-scrollable">
+                <form th:action="@{/book/recommendation}" method="POST">
+                    <input type="hidden" th:name="${_csrf?.parameterName}" th:value="${_csrf?.token}" />
+                    <input type="hidden" name="tagId" th:value="${tagId}" />
+                    <div th:each="qa, idx : ${questionAnswerList}">
+                        <div class="form-step" th:id="'step' + ${idx.index + 1}"
+                            th:style="${idx.index == 0} ? 'display:block;' : 'display:none;'">
+                            <h5 th:text="${qa.question}">질문</h5>
+                            <div th:id="'step' + ${idx.index + 1} + '-answer-buttons'"
+                                class="d-flex flex-wrap justify-content-center mt-4">
+                                <button type="button" class="btn btn-outline-light m-1" th:each="ans, i : ${qa.answers}"
+                                    th:text="${ans.answer}" th:attr="data-id=${ans.answerId}"
+                                    th:onclick="'toggleSelection(this,' + ${idx.index} + ')'">
+                                </button>
+                            </div>
+
+                            <!-- 자연어 입력 처리 -->
+                            <div th:if="${qa.questionType == 'NATURAL'}" class="form-group mt-3 w-100">
+                                <label>자유롭게 입력해주세요:</label>
+                                <textarea class="form-control" rows="4"
+                                          th:id="'selectAnswerText' + ${idx.index}"
+                                          th:name="'answerTexts[' + ${idx.index} + ']'"
+                                          placeholder="생각이나 경험을 자유롭게 입력해주세요"></textarea>
+
+                                <input type="hidden" th:id="'selectAnswerId' + ${idx.index}"
+                                       th:name="'answerIds[' + ${idx.index} + ']'"
+                                       value="-1" /> <!-- 자연어 질문은 answerId를 -1로 고정 -->
+                            </div>
+
+                            <input type="hidden" th:name="'questions[' + ${idx.index} + ']'" th:value="${qa.question}">
+                            <input type="hidden" th:name="'answerIds[' + ${idx.index} + ']'"
+                                th:id="'selectAnswerId' + ${idx.index}">
+                            <input type="hidden" th:name="'answerTexts[' + ${idx.index} + ']'"
+                                th:id="'selectAnswerText' + ${idx.index}">
+                            <div class="mt-4 text-center">
+                                <button type="button" class="btn btn-light mt-3 me-2" th:if="${idx.index > 0}"
+                                    onclick="prevStep()"> &lt; 이전 </button>
+                                <button type="button" class="btn btn-light mt-3"
+                                        th:if="${idx.index < questionAnswerList.size() - 1 and qa.questionType != 'NATURAL'}"
+                                        onclick="nextStep()"> &gt; 다음
+                                </button>
+                                <button type="submit" class="btn btn-submit mt-3"
+                                    th:if="${idx.index == questionAnswerList.size() - 1}">제출</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <nav class="footer-nav d-flex justify-content-around text-white">
+                <button class="btn btn-dark d-flex flex-column align-items-center"
+                        onclick="location.href='/home'">
+                    <i class="fas fa-home"></i><small>홈</small>
+                </button>
+                <button class="btn btn-dark d-flex flex-column align-items-center"
+                        onclick="location.href='/record'">
+                    <i class="fas fa-book"></i><small>내 서재</small>
+                </button>
+                <button class="btn btn-dark d-flex flex-column align-items-center active"
+                        onclick="location.href='/book/recommendation'">
+                    <i class="fas fa-search"></i><small>책 추천</small>
+                </button>
+                <button class="btn btn-dark d-flex flex-column align-items-center"
+                        onclick="location.href='/bulletin'">
+                    <i class="fas fa-comments"></i><small>게시판</small>
+                </button>
+                <button class="btn btn-dark d-flex flex-column align-items-center"
+                        onclick="location.href='/mypage'">
+                    <i class="fas fa-user"></i><small>내 정보</small>
+                </button>
+            </nav>
+        </div>
+    </section>
+
+    <script>
+        let currentStep = 1;
+
+        function nextStep() {
+            document.getElementById(`step${currentStep}`).style.display = 'none';
+            currentStep++;
+            document.getElementById(`step${currentStep}`).style.display = 'block';
+        }
+
+        function prevStep() {
+            document.getElementById(`step${currentStep}`).style.display = 'none';
+            currentStep--;
+            document.getElementById(`step${currentStep}`).style.display = 'block';
+        }
+
+        function toggleSelection(button, index) {
+            const group = document.querySelectorAll(`#step${index + 1}-answer-buttons .btn`);
+            group.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            document.getElementById(`selectAnswerId${index}`).value = button.dataset.id;
+            document.getElementById(`selectAnswerText${index}`).value = button.innerText.trim();
+        }
+    </script>
+</body>
+
+</html>
