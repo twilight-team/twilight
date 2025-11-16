@@ -13,6 +13,7 @@
 
 
 ## Architecture
+<img src="https://github.com/user-attachments/assets/3facea72-6996-4789-afd0-3e52027f6850" width="700"/>
 
 
 ## Documents
